@@ -1,0 +1,75 @@
+.title {
+    font-size: 54px;
+    text-align: center;
+}
+
+.board {
+    width: 279px;
+    display: flex;
+    flex-wrap: wrap;
+    margin: 20px auto 0 auto;
+}
+
+.square {
+    width: 90px;
+    height: 90px;
+    border: 1px solid #000;
+    text-align: center;
+    line-height: 90px;
+    font-size: 50px;
+}
+
+.square:hover {
+    cursor: pointer;
+    background-color: #edeff2;
+}
+
+.btn-wrap {
+    display: flex;
+    justify-content: center;
+}
+
+.new-btn {
+    padding: 15px 15px;
+    border-radius: 25px;
+    border: none;
+    background-color: #2e6fd1;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.new-btn:hover {
+    box-shadow: 0 0 10px #2e6fd1;
+}
+
+.winner-text {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+[data-id="0"],[data-id="1"],[data-id="2"] {
+    border-top: none;
+    border-bottom: none;
+}
+
+[data-id="0"],[data-id="3"],[data-id="6"] {
+    border-left: none;
+}
+
+[data-id="2"],[data-id="5"],[data-id="8"] {
+    border-right: none;
+}
+
+[data-id="6"],[data-id="7"],[data-id="8"] {
+    border-top: none;
+    border-bottom: none;
+}
+
+[data-id="3"],[data-id="4"],[data-id="5"] {
+    border-top: 2px solid #000;;
+    border-bottom: 2px solid #000;;
+}
