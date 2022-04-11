@@ -1,21 +1,21 @@
-const Player = (isX) => {
-    let sign = '';
-    if(isX) {
-        sign = 'X';
-    } else {
-        sign = "O"; 
-    }
+const winCond = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+];
 
+const Player = (setSign) => {
+    let sign = setSign;
     return {sign}
 }
 
-const aiPlayer = (isX) => {
-    let sign = '';
-    if(isX) {
-        sign = 'X';
-    } else {
-        sign = "O"; 
-    }
+const aiPlayer = (setSign) => {
+    let sign = setSign;
 
     function getEmptySquares(squares) {
         let indexes = [];
@@ -42,6 +42,7 @@ const aiPlayer = (isX) => {
 
     function bestMove(squares, aiSign, playerSign) {
         const emptySlots = getEmptySquares(squares);
+
         for(let i = 0; i < emptySlots.length; i++){
             if(checkOnWin(squares,emptySlots[i], aiSign) !== null){
                 return emptySlots[i];
@@ -52,6 +53,7 @@ const aiPlayer = (isX) => {
                 return emptySlots[i];
             }
         }
+
         const angleMoveIndex = angleMove(squares);
         if(angleMoveIndex !== null) {
             return angleMoveIndex
@@ -62,16 +64,6 @@ const aiPlayer = (isX) => {
     function checkOnWin(squares, move, sign) {
         let _squares = squares.slice();
         _squares[move] = sign;
-        const winCond = [
-            [0, 1, 2],
-            [3, 4, 5],
-            [6, 7, 8],
-            [0, 3, 6],
-            [1, 4, 7],
-            [2, 5, 8],
-            [0, 4, 8],
-            [2, 4, 6],
-          ];
 
           for(let i = 0; i < winCond.length; i++) {
             const [a, b, c] = winCond[i];
@@ -103,7 +95,22 @@ const aiPlayer = (isX) => {
 }
 
 const Board = () => {
-    function turn(squares, i) {
+
+    function turn(squares, choice, sign) {
+        squares[choice] = sign;
+        document.querySelector('.square[data-id="' + choice + '"').innerHTML = sign;
+        
+        if(isWin(squares)) {
+            return "win"
+        }
+        if(isDraw(squares)){
+            return "draw"
+            
+        }
+        return "nothing"
+    }
+
+    function isEmptySquare(squares, i) {
         if(squares[i] === null){
             return true
         }
@@ -111,17 +118,6 @@ const Board = () => {
     }
 
     function isWin(squares) {
-        const winCond = [
-            [0, 1, 2],
-            [3, 4, 5],
-            [6, 7, 8],
-            [0, 3, 6],
-            [1, 4, 7],
-            [2, 5, 8],
-            [0, 4, 8],
-            [2, 4, 6],
-          ];
-
           for(let i = 0; i < winCond.length; i++) {
             const [a, b, c] = winCond[i];
             if(squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
@@ -137,69 +133,71 @@ const Board = () => {
         else return true
     }
 
-    return {turn, isWin, isDraw}
+    return {turn, isEmptySquare}
 }
 
 const Game = () => {
-    let Player1;
-    let aiPlayer1 = aiPlayer(false);
     let squares;
-    const GameBoard = Board(squares);
     let xIsNext;
     let isGameEnd;
+    const Player1 = Player("X");
+    const aiPlayer1 = aiPlayer("O");
+    let GameBoard;
 
-    function initialize() {
-        Player1 = Player(true);
-        aiPlayer1 = aiPlayer(false)
+    function initialize() { 
         squares = Array(9).fill(null)
+        GameBoard = Board(squares);
         xIsNext = true;
         isGameEnd = false;
         createBoard();
     }
 
-    function playerMove(i){
-        if(GameBoard.turn(squares, i) && !isGameEnd) {
-            squares[i] = Player1.sign;
-            document.querySelector('.square[data-id="' + i + '"').innerHTML = squares[i];
-            xIsNext = !xIsNext;
-            let winnerSign = GameBoard.isWin(squares);
-            if(winnerSign) {
-                endGame(winnerSign)
+    function startMove(square,sign){
+        const result = GameBoard.turn(squares, square, sign);
+        let nextTurn = false;
+        switch (result) {
+            case 'win':
+                endGame(sign)
+                break
+            case "draw":
+                endGame(null)
+                break
+            case "nothing":
+                nextTurn = true
+                break
+        } 
+        return nextTurn
+    } 
+
+    function playerMove(square){
+        if(GameBoard.isEmptySquare(squares, square) && !isGameEnd) {
+            let nextTurn = startMove(square,Player1.sign);
+            if(nextTurn){
+                setTimeout(aiMove, 100);
             }
-            else if(GameBoard.isDraw(squares)){
-                endGame(winnerSign)
-            }
-            if(!isGameEnd) {setTimeout(aiMove, 100)}  
         }
     }
 
     function aiMove() {
-
-        let aiChoice;
-        aiChoice = aiPlayer1.bestMove(squares, aiPlayer1.sign, Player1.sign)
+        let aiChoice = aiPlayer1.bestMove(squares, aiPlayer1.sign, Player1.sign)
         if(aiChoice == null){
             aiChoice = aiPlayer1.aiMoveRandom(squares);
         }
-        squares[aiChoice] = aiPlayer1.sign;
-        document.querySelector('.square[data-id="' + aiChoice + '"').innerHTML = aiPlayer1.sign;
-        let winnerSign = GameBoard.isWin(squares);
-        if(winnerSign) {
-            endGame(winnerSign)
-        }
-        else if(GameBoard.isDraw(squares)){
-            endGame(winnerSign)
-        }
+        startMove(aiChoice,aiPlayer1.sign);
     }
 
     function endGame(winnerSign){
         isGameEnd = true;
         const boardWrap = document.getElementById("board-wrap");
+
         const winnerText = document.createElement('div');
-        winnerText.classList.add('winner-text')
+        winnerText.classList.add('winner-text');
+
         const startButton = document.createElement('div');
-        startButton.classList.add('btn-wrap')
-        startButton.insertAdjacentHTML('beforeEnd','<button class="new-btn" onclick="Start()">Начать новую игру</button>')
-        if(winnerSign !== undefined){ 
+        startButton.classList.add('btn-wrap');
+        startButton.insertAdjacentHTML('beforeEnd','<button class="new-btn" onclick="Start()">Start new game</button>');
+
+        if(winnerSign !== null){ 
             winnerText.insertAdjacentHTML('beforeEnd', 'The winner is ' + winnerSign);
             boardWrap.appendChild(winnerText);
         }
@@ -213,21 +211,20 @@ const Game = () => {
     function createBoard() {
         const boardWrap = document.getElementById("board-wrap");
         boardWrap.innerHTML = '';
+        
         const squares = document.createElement('div');
         squares.classList.add('board');
         for(let i = 0; i < 9; i++){
-            const p = '<div class="square" data-id="' + i + '" onclick="Game1.playerMove(' + i + ')"></div>'
+            const p = '<div class="square" data-id="' + i + '" onclick="GameObj.playerMove(' + i + ')"></div>'
             squares.insertAdjacentHTML('beforeEnd', p)
         }
-        console.log(boardWrap);
         boardWrap.appendChild(squares);
     }
     return {playerMove, initialize}
 }
 
-const Game1 = Game();
+const GameObj = Game();
 
 function Start() {
-    Game1.initialize();
+    GameObj.initialize();
 };
-
